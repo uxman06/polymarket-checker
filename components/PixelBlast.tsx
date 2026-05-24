@@ -99,7 +99,7 @@ const createLiquidEffect = (texture: THREE.Texture, opts: any) => {
     uniform float uFreq;
 
     void mainUv(inout vec2 uv) {
-      vec4 tex = texture2D(uTexture, uv);
+      vec4 tex = texture(uTexture, uv);
       float vx = tex.r * 2.0 - 1.0;
       float vy = tex.g * 2.0 - 1.0;
       float intensity = tex.b;
@@ -245,7 +245,7 @@ void main(){
   vec2 uv = cellCoord / uResolution * vec2(aspectRatio, 1.0);
 
   float base = fbm2(uv, uTime * 0.05);
-  base = base * 0.5 - 0.65;
+  base = base * 0.5 - 0.25;
 
   float feed = base + (uDensity - 0.5) * 0.3;
 
@@ -562,7 +562,6 @@ const PixelBlast = ({
     }
     prevConfigRef.current = cfg;
     return () => {
-      if (threeRef.current && mustReinit) return;
       if (!threeRef.current) return;
       const t = threeRef.current;
       t.resizeObserver?.disconnect();
