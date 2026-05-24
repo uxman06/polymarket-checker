@@ -16,11 +16,19 @@ export interface Trade {
   outcome?: string;
 }
 
+export interface Token {
+  token_id: string;
+  outcome: string;
+  price: number;
+  winner?: boolean;
+}
+
 export interface Market {
   id: string;
   question: string;
   conditionId: string;
   clobTokenIds: string[];
+  tokens: Token[];
   resolvedBy?: string;
   resolutionTime?: string | null;
   closed: boolean;
@@ -94,6 +102,12 @@ export async function fetchMarkets(conditionIds: string[]): Promise<Map<string, 
           question: m.question || '',
           conditionId: m.condition_id,
           clobTokenIds: m.tokens?.map((t: any) => t.token_id) || [],
+          tokens: m.tokens?.map((t: any) => ({
+            token_id: t.token_id,
+            outcome: t.outcome,
+            price: t.price,
+            winner: t.winner
+          })) || [],
           resolutionTime: m.end_date_iso || null,
           closed: !!m.closed,
           active: !!m.active,

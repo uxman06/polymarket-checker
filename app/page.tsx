@@ -12,6 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [closedPage, setClosedPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   
   const [stats, setStats] = useState<any>({
@@ -29,6 +30,7 @@ export default function Home() {
     setLoading(true);
     setError('');
     setCurrentPage(1);
+    setClosedPage(1);
     
     try {
       const res = await fetch(`/api/check?address=${encodeURIComponent(address)}`);
@@ -67,7 +69,7 @@ export default function Home() {
             <path d="M22 37L68 50L22 63" stroke="white" strokeWidth="7" strokeLinejoin="round"/>
           </svg>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mt-2">
-            Polymarket <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Tracker</span>
+            Polymarket <span>Tracker</span>
           </h1>
         </div>
         <p className="text-gray-400 max-w-lg mb-10 text-lg">
@@ -207,14 +209,30 @@ export default function Home() {
                   <div className="flex-1 text-left">MARKET</div>
                   <div className="flex items-center gap-6 md:gap-10 text-right pr-2">
                     <div className="hidden sm:block w-12 text-right">AVG</div>
+                    <div className="w-12 text-right">PNL</div>
                     <div className="w-8 text-center">TXN</div>
                   </div>
                 </div>
                 <div className="flex flex-col">
                   {stats.closedMarketsList && stats.closedMarketsList.length > 0 ? (
-                    stats.closedMarketsList.map((market: any, idx: number) => (
-                      <ClosedMarketRow key={market.conditionId || idx} market={market} />
-                    ))
+                    <>
+                      {stats.closedMarketsList.slice((closedPage - 1) * ITEMS_PER_PAGE, closedPage * ITEMS_PER_PAGE).map((market: any, idx: number) => (
+                        <ClosedMarketRow key={market.conditionId || idx} market={market} />
+                      ))}
+                      {Math.ceil(stats.closedMarketsList.length / ITEMS_PER_PAGE) > 1 && (
+                        <div className="flex items-center justify-center gap-2 p-4 bg-card/20 border-t border-border">
+                          {Array.from({ length: Math.ceil(stats.closedMarketsList.length / ITEMS_PER_PAGE) }).map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setClosedPage(i + 1)}
+                              className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${closedPage === i + 1 ? 'bg-primary text-white border border-primary' : 'bg-card hover:bg-card/80 text-gray-400 hover:text-white border border-border'}`}
+                            >
+                              {i + 1}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="p-8 text-center text-gray-500 text-sm">0 markets resolved</div>
                   )}
@@ -227,6 +245,7 @@ export default function Home() {
                 onClick={() => {
                   setAddress('');
                   setCurrentPage(1);
+                  setClosedPage(1);
                   setStats({
                     betsPlaced: 0,
                     volumeUSDC: 0,

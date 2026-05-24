@@ -31,6 +31,12 @@ export function ClosedMarketRow({ market }: { market: ClosedMarketData }) {
             {market.avgBuyPrice > 0 ? `${(market.avgBuyPrice * 100).toFixed(1)}¢` : '--'}
           </span>
         </div>
+        <div className="flex flex-col text-right">
+          <span className="text-gray-500 text-xs font-semibold mb-1">PNL</span>
+          <span className={`text-sm font-medium ${market.pnl > 0 ? 'text-green-400' : market.pnl < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+            {market.pnl > 0 ? '+' : ''}{market.pnl !== undefined ? `$${Math.abs(market.pnl).toFixed(2)}` : '--'}
+          </span>
+        </div>
         <a 
           href={`https://polygonscan.com/tx/${market.transactionHash}`}
           target="_blank"

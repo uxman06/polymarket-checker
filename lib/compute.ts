@@ -8,6 +8,7 @@ export interface ClosedMarketData {
   sharesTraded: number;
   avgBuyPrice: number;
   transactionHash: string;
+  pnl: number;
 }
 
 export interface LongestHeldBetData {
@@ -151,7 +152,13 @@ export function computeStats(trades: Trade[], marketMap: Map<string, Market>): C
   const longestHeldBetsList = Array.from(uniqueHeldBetsMap.values()).sort((a, b) => b.days - a.days);
 
   // Closed Markets List
-  const closedMarketsMap = new Map<string, { data: ClosedMarketData, totalUSDC: number, buyShares: number }>();
+  const closedMarketsMap = new Map<string, { 
+    data: ClosedMarketData, 
+    totalUSDC: number, 
+    buyShares: number,
+    netUSDC: number,
+    assetPositions: Record<string, number>
+  }>();
 
   for (const t of trades) {
     const market = marketMap.get(t.conditionId);
@@ -164,27 +171,56 @@ export function computeStats(trades: Trade[], marketMap: Map<string, Market>): C
           outcome: t.outcome || 'Unknown',
           sharesTraded: 0,
           avgBuyPrice: 0,
-          transactionHash: t.transactionHash
+          transactionHash: t.transactionHash,
+          pnl: 0
         },
         totalUSDC: 0,
-        buyShares: 0
+        buyShares: 0,
+        netUSDC: 0,
+        assetPositions: {}
       };
       
       existing.data.sharesTraded += t.size;
       
+      if (!existing.assetPositions[t.asset]) {
+        existing.assetPositions[t.asset] = 0;
+      }
+      
       if (t.side === 'BUY') {
         existing.totalUSDC += (t.size * t.price);
         existing.buyShares += t.size;
+        existing.netUSDC += (t.size * t.price);
+        existing.assetPositions[t.asset] += t.size;
+      } else if (t.side === 'SELL') {
+        existing.netUSDC -= (t.size * t.price);
+        // Sometimes floating point math causes minor negatives, keep it clean
+        existing.assetPositions[t.asset] = Math.max(0, existing.assetPositions[t.asset] - t.size);
       }
+      
+      if (t.outcome) existing.data.outcome = t.outcome;
+      if (t.icon) existing.data.icon = t.icon;
       
       closedMarketsMap.set(t.conditionId, existing);
     }
   }
 
   const closedMarketsList = Array.from(closedMarketsMap.values()).map(m => {
+    let winningPayout = 0;
+    const market = marketMap.get(m.data.conditionId);
+    if (market && market.tokens) {
+      for (const token of market.tokens) {
+        if (token.winner && m.assetPositions[token.token_id]) {
+          winningPayout += m.assetPositions[token.token_id] * 1.0;
+        }
+      }
+    }
+    
+    const pnl = winningPayout - m.netUSDC;
+
     return {
       ...m.data,
-      avgBuyPrice: m.buyShares > 0 ? (m.totalUSDC / m.buyShares) : 0
+      avgBuyPrice: m.buyShares > 0 ? (m.totalUSDC / m.buyShares) : 0,
+      pnl: parseFloat(pnl.toFixed(2))
     };
   });
 
