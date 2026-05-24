@@ -1,6 +1,6 @@
 import pLimit from 'p-limit';
 
-const limit = pLimit(5); // Concurrency limit for Gamma API
+const limit = pLimit(10); // Concurrency limit for CLOB API
 
 export interface Trade {
   transactionHash: string;
@@ -68,44 +68,43 @@ export async function fetchUserTrades(address: string): Promise<Trade[]> {
 
 export async function fetchMarkets(conditionIds: string[]): Promise<Map<string, Market>> {
   const uniqueIds = Array.from(new Set(conditionIds));
-  const batchSize = 20;
-  const batches = [];
-  for (let i = 0; i < uniqueIds.length; i += batchSize) {
-    batches.push(uniqueIds.slice(i, i + batchSize));
-  }
-
   const marketMap = new Map<string, Market>();
 
-  const fetchBatch = async (batch: string[], retries = 3): Promise<void> => {
+  const fetchOne = async (conditionId: string, retries = 3): Promise<void> => {
     try {
-      // Gamma API handles condition_ids
-      const params = batch.map(id => `condition_ids=${id}`).join('&');
-      const url = `https://gamma-api.polymarket.com/markets?${params}`;
-      
+      const url = `https://clob.polymarket.com/markets/${conditionId}`;
       const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
       if (!response.ok) {
         if (response.status === 429 && retries > 0) {
           await new Promise(r => setTimeout(r, 1000 * (4 - retries)));
-          return fetchBatch(batch, retries - 1);
+          return fetchOne(conditionId, retries - 1);
         }
-        console.error(`Gamma API error: ${response.status}`);
+        // 404 = market not found on CLOB, skip silently
+        if (response.status !== 404) {
+          console.error(`CLOB API error for ${conditionId}: ${response.status}`);
+        }
         return;
       }
-      
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        for (const m of data) {
-          if (m && m.conditionId) {
-            marketMap.set(m.conditionId, m);
-          }
-        }
+
+      const m = await response.json();
+      if (m && m.condition_id) {
+        marketMap.set(m.condition_id, {
+          id: m.condition_id,
+          question: m.question || '',
+          conditionId: m.condition_id,
+          clobTokenIds: m.tokens?.map((t: any) => t.token_id) || [],
+          resolutionTime: m.end_date_iso || null,
+          closed: !!m.closed,
+          active: !!m.active,
+        });
       }
     } catch (e) {
-      console.error("Failed to fetch market batch", e);
+      console.error(`Failed to fetch market ${conditionId}`, e);
     }
   };
 
-  const tasks = batches.map(batch => limit(() => fetchBatch(batch)));
+  const tasks = uniqueIds.map(id => limit(() => fetchOne(id)));
   await Promise.allSettled(tasks);
 
   return marketMap;

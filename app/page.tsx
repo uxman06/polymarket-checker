@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StatCard } from '@/components/StatCard';
 import { ClosedMarketRow } from '@/components/ClosedMarketRow';
-import PixelBlast from '@/components/PixelBlast';
+
 import { Search, Activity, DollarSign, CalendarDays, Flame, Trophy, ExternalLink, ArrowRight } from 'lucide-react';
 
 export default function Home() {
@@ -54,27 +54,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#15191D] text-foreground flex flex-col items-center pt-16 px-4 pb-24 relative overflow-hidden">
-      <PixelBlast
-        variant="square"
-        pixelSize={4}
-        color="#007AFF"
-        patternScale={2.5}
-        patternDensity={1.2}
-        liquid={true}
-        liquidStrength={0.06}
-        liquidRadius={0.8}
-        pixelSizeJitter={0.2}
-        enableRipples={true}
-        rippleIntensityScale={1.5}
-        rippleThickness={0.15}
-        rippleSpeed={0.4}
-        liquidWobbleSpeed={5.0}
-        speed={0.4}
-        transparent={true}
-        edgeFade={0.15}
-        noiseAmount={0.02}
-        style={{ opacity: 0.35 }}
-      />
+
       <div className="relative z-10 w-full flex flex-col items-center max-w-4xl mx-auto">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
