@@ -71,9 +71,9 @@ export default function Home() {
         liquidWobbleSpeed={5.0}
         speed={0.4}
         transparent={true}
-        edgeFade={0.6}
+        edgeFade={0.15}
         noiseAmount={0.02}
-        style={{ opacity: 0.25 }}
+        style={{ opacity: 0.35 }}
       />
       <div className="relative z-10 w-full flex flex-col items-center max-w-4xl mx-auto">
       <motion.div 
