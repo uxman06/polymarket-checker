@@ -87,7 +87,7 @@ export default function Home() {
             <path d="M22 37L68 50L22 63" stroke="white" strokeWidth="7" strokeLinejoin="round"/>
           </svg>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mt-2">
-            Polymarket <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Tracker</span>
+            Polymarket <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Tracker</span>
           </h1>
         </div>
         <p className="text-gray-400 max-w-lg mb-10 text-lg">
